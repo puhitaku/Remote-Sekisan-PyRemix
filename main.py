@@ -1,12 +1,10 @@
 import socket, requests, json, codecs
 from optparse import OptionParser
 from flask import Flask, request, jsonify
-
+from manager import AcquireManager
 
 app = Flask(__name__)
-app.config.update(
-    PROPAGATE_EXCEPTIONS = True
-)
+manager = AcquireManager()
 
 @app.route('/')
 def index():
@@ -19,35 +17,18 @@ def get_my_ip():
 @app.route('/acquire')
 def acquire():
     client_ip = request.remote_addr
-    #return 'wow', 200
-    return acq_manager.acquire(client_ip)
+    if manager.acquire(client_ip):
+        return jsonify({'mes': 'OK'}), 200
+    else:
+        return jsonify({'mes': 'NG'}), 200
 
 @app.route('/free')
 def free():
     client_ip = request.remote_addr
-    return acq_manager.free(client_ip)
-
-class AcquireManager:
-    def __init__(self, user_dict):
-        self.acquired_user = ''
-        self.user_dict = user_dict
-    def acquire(self, ip):
-        if   self.acquired_user != '':
-            res = ' '.join([self.acquired_user,'is using the service.'])
-            return (res, 503)
-        elif ip in self.user_dict:
-            self.acquired_user = self.user_dict[ip]
-            res = 'OK'
-            return (res, 200)
-        else:
-            res = 'This IP address is not registered.'
-            return (res, 404)
-
-    def free(self, ip):
-        if self.user_dict[ip] == self.acquired_user:
-            self.acquired_user = ''
-            res = {'OK'}
-            return (res, 200)
+    if manager.free(client_ip):
+        return jsonify({'mes': 'OK'}), 200
+    else:
+        return jsonify({'mes': 'NG'}), 200
 
 def parse(usage):
     p = OptionParser(usage)
@@ -80,10 +61,9 @@ def main():
         f = codecs.open('setting_nakaken.json', 'r', 'utf-8')
         setting = json.loads(f.read())
         user = setting['user']
+        manager.set_user_list(user)
 
-        acq_manager = AcquireManager(user)
-        global acq_manager
-        app.run(host='0.0.0.0')
+        app.run(host='0.0.0.0', debug=True)
 
 
 if __name__ == '__main__':
