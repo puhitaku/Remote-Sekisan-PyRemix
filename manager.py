@@ -1,3 +1,7 @@
+from threading import Thread
+from time import sleep
+import sys
+
 class AcquireManager:
     def __init__(self):
         self.user_using = ''
@@ -20,3 +24,42 @@ class AcquireManager:
             return True
         else:
             return False
+
+class HeartBeatManager():
+    def __init__(self):
+        self.time_to_live = 0
+        self.elapsed = 0
+        self.thread = None
+        self.do_nothing = lambda: None
+
+    def set_ttl(self, t):
+        """How long will you live?"""
+        self.time_to_live = t
+
+    def _run(self, callback):
+        """Live longer!"""
+        self.live()
+        while self.elapsed < self.time_to_live:
+            sleep(1)
+            self.elapsed += 1
+
+        if self.elapsed >= sys.maxsize:
+            #Forcedly killed
+            return
+        else:
+            #End of life
+            callback()
+
+    def born(self, callback=(lambda: None)):
+        """A thread was born in the USA."""
+        self.thread = Thread(target=self._run, args=(callback,))
+        self.thread.daemon = True
+        self.thread.start()
+
+    def live(self):
+        """Let the thread come back to life."""
+        self.elapsed = 0
+
+    def kill(self):
+        """I am the god of hellfire, and I bring you..."""
+        self.elapsed = sys.maxsize
