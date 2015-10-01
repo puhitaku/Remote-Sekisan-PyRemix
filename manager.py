@@ -30,7 +30,6 @@ class HeartBeatManager():
         self.time_to_live = 0
         self.elapsed = 0
         self.thread = None
-        self.do_nothing = lambda: None
 
     def set_ttl(self, t):
         """How long will you live?"""
