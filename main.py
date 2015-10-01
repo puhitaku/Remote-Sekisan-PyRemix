@@ -59,7 +59,7 @@ def main():
     print('mode =', options.mode)
 
     if options.mode == 'server':
-        f = codecs.open('setting_nakaken.json', 'r', 'utf-8')
+        f = codecs.open('setting.json', 'r', 'utf-8')
         setting = json.loads(f.read())
         user = setting['user']
         manager.set_user_list(user)
