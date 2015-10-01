@@ -1,10 +1,11 @@
 import socket, requests, json, codecs
 from optparse import OptionParser
 from flask import Flask, request, jsonify
-from manager import AcquireManager
+from manager import AcquireManager, HeartBeatManager
 
 app = Flask(__name__)
 manager = AcquireManager()
+heart = HeartBeatManager()
 
 @app.route('/')
 def index():
@@ -18,14 +19,14 @@ def get_my_ip():
 def acquire():
     client_ip = request.remote_addr
     if manager.acquire(client_ip):
+        heart.born(callback=manager.free)
         return jsonify({'mes': 'OK'}), 200
     else:
         return jsonify({'mes': 'NG'}), 200
 
 @app.route('/free')
 def free():
-    client_ip = request.remote_addr
-    if manager.free(client_ip):
+    if manager.free():
         return jsonify({'mes': 'OK'}), 200
     else:
         return jsonify({'mes': 'NG'}), 200
@@ -62,6 +63,7 @@ def main():
         setting = json.loads(f.read())
         user = setting['user']
         manager.set_user_list(user)
+        heart.set_ttl(setting['ttl'])
 
         app.run(host='0.0.0.0', debug=True)
 
