@@ -18,8 +18,8 @@ class AcquireManager:
         else:
             return False
 
-    def free(self, ip):
-        if self.user_list[ip] == self.user_using:
+    def free(self):
+        if self.user_using != '':
             self.user_using = ''
             return True
         else:
